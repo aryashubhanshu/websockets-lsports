@@ -15,11 +15,11 @@ matchRouter.get("/", async (req, res) => {
     if (!parsed.success) {
         return res.status(400).json({
             error: "Invalid query parameters.",
-            details: JSON.stringify(parsed.error)
+            details: parsed.error.issues
         })
     }
 
-    const { limit } = Math.min(parsed.data.limit ?? 50, MAX_LIMIT);
+    const limit = Math.min(parsed.data.limit ?? 50, MAX_LIMIT);
 
     try {
         const data = await db.select().from(matches).orderBy(desc(matches.createdAt)).limit(limit);
@@ -31,21 +31,22 @@ matchRouter.get("/", async (req, res) => {
     } catch (error) {
         return res.status(500).json({
             error: "Failed to fetch matches.",
-            details: JSON.stringify(error)
+            details: parsed.error.issues
         })
     }
 });
 
 matchRouter.post("/", async (req, res) => {
     const parsed = createMatchSchema.safeParse(req.body);
-    const { data: { startTime, endTime, homeScore, awayScore } } = parsed;
-
+    
     if (!parsed.success) {
         return res.status(400).json({
             error: "Invalid payload.",
-            details: JSON.stringify(parsed.error)
+            details: parsed.error.issues
         })
     }
+    
+    const { startTime, endTime, homeScore, awayScore } = parsed.data;
 
     try {
         const [event] = await db.insert(matches).values({
@@ -62,9 +63,9 @@ matchRouter.post("/", async (req, res) => {
             data: event
         });
     } catch (error) {
-        res.status(500).json({
+        return res.status(500).json({
             error: "Failed to create match.",
-            details: JSON.stringify(error)
+            details: parsed.error.issues
         })
     }
 });
