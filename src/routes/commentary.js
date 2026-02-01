@@ -67,12 +67,12 @@ commentaryRouter.post('/', async (req, res) => {
     }
 
     try {
-        const { minutes, ...rest } = bodyResult.data;
+        const { minute, ...rest } = bodyResult.data;
         const [result] = await db
             .insert(commentary)
             .values({
                 matchId: paramsResult.data.id,
-                minute: minutes,
+                minute,
                 ...rest,
             })
             .returning();
